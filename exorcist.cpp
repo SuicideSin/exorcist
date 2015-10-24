@@ -7,13 +7,11 @@ void save_payload(const Tins::TCPStream::payload_type& payload,const std::string
 {
 	std::string data((char*)payload.data(),payload.size());
 
-	std::cout<<file<<"\t|"<<std::flush;
-	std::cout<<data<<std::flush;
-	std::cout<<"|"<<std::endl;
-
 	std::ofstream ostr(file);
 	ostr<<data;
 	ostr.close();
+
+	std::cout<<"Saved: "<<file<<std::endl;
 }
 
 bool follow(Tins::TCPStream& stream)
