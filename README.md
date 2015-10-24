@@ -5,6 +5,7 @@ Requires C++11.
 Works on Linux, Mac, Windows, and probably more...
 
 Building:
+
 	1) Start by building libtins (only have to do this once):
 		./build_libtins.sh
 
