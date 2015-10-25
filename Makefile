@@ -1,6 +1,6 @@
 CPP=g++
 CFLAGS=-O -Wall -std=c++11
-LIB=-lpcap -lpthread libtins-master/build/lib/libtins.so.3.3
+LIB=-lpcap -lpthread -ltins
 INC=-Ilibtins-master/include
 
 all: exorcist
