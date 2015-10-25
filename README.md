@@ -8,8 +8,8 @@ Works on Linux, Mac, Windows, and probably more...
 
 Building:
 
-	1) Start by building libtins (only have to do this once):
-		./build_libtins.sh
+	1) Start by installing a NEWER version libtins (only have to do this once):
+		./install_libtins.sh
 
 	2) After that, make exorcist:
 		make
