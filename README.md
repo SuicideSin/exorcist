@@ -3,7 +3,7 @@ NO WHERE CLOSE TO RELEASE
 Exorcist
 Utility for finding malware in pcaps or live streams.
 
-Requires C++11.
+Requires C++11, libpcap, libssl, and cmake.
 Works on Linux, Mac, Windows, and probably more...
 
 Building:
