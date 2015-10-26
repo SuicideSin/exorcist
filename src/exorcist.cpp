@@ -1,7 +1,17 @@
+#include <cctype>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <tins/tins.h>
+
+std::string to_lower(std::string str)
+{
+	for(auto& ii:str)
+		ii=tolower(ii);
+
+	return str;
+}
 
 void save_to_file(const std::string& data,const std::string& file)
 {
@@ -19,15 +29,36 @@ void save_payload(const Tins::TCPStream::payload_type& payload,const std::string
 void process_payload(const Tins::RawPDU::payload_type& payload,const std::string& name)
 {
 	std::string data((char*)payload.data(),payload.size());
-
 	save_to_file(data,name+".raw");
+	size_t count=0;
+	size_t ptr=0;
 
-	if(data.substr(0,15)=="HTTP/1.0 200 OK"||data.substr(0,15)=="HTTP/1.1 200 OK")
+	while(true)
 	{
-		size_t ptr=data.find("\r\n\r\n");
+		bool found=false;
 
-		if(ptr!=std::string::npos)
-			save_to_file(data.substr(ptr+4,data.size()),name+".html");
+		if(data.substr(ptr,15)=="HTTP/1.0 200 OK"||data.substr(ptr,15)=="HTTP/1.1 200 OK")
+		{
+			size_t cl_ptr=to_lower(data).find("content-length:",ptr);
+			size_t header_end=data.find("\r\n\r\n",ptr);
+
+			if(cl_ptr!=std::string::npos&&header_end!=std::string::npos)
+			{
+				std::istringstream istr(data.substr(cl_ptr+15,data.size()));
+				size_t html_size=0;
+
+				if((istr>>html_size)&&html_size>0&&html_size<data.size())
+				{
+					save_to_file(data.substr(header_end+4,html_size),name+"_"+std::to_string(count)+".html");
+					ptr+=header_end+4+html_size;
+					++count;
+					found=true;
+				}
+			}
+		}
+
+		if(!found||ptr>=data.size())
+			break;
 	}
 }
 

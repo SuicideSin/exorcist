@@ -1,6 +1,6 @@
 SRC=src
 CPP=g++
-CFLAGS=-O -Wall -std=c++11
+CFLAGS=-O -Wall -std=c++11 -ggdb
 LIB=-lpcap -lpthread -ltins
 
 all: exorcist

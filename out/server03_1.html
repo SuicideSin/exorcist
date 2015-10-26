@@ -1,0 +1,2 @@
+document.write('<a href="http://at.atwola.com/?adlink/5113/395191/0/5/AdId=51190;BnId=18;itime=143116958;kvmn=93245558;kvtid=15877ia00a8vbi;kvseg=99999:50280;kvag=am3:ua39;kvug=1;" target=_blank><img src="http://aka-cdn-ns.adtechus.com/images/327/Ad0St1Sz5Sq0V1Id763207.gif" border=0 alt="Advertisement" width=120 height=90></a>');
+  
