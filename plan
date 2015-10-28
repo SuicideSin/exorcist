@@ -1,0 +1,12 @@
+Week 0:
+	-Now able to read files from a pcap or network stream painlessly...with application data in it.
+	-HTTP application data is removed.
+
+Next Week:
+	-Try to remove application data for common protocols:
+		-ftp
+		-AIM (for sake of having example pcaps)
+	-Come up with heuristics for checking for malware:
+		-Hashes?
+		-Diffs?
+		-Straight binary comparison?
