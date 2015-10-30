@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <tins/tins.h>
 
@@ -18,7 +19,7 @@ void save_to_file(const std::string& data,const std::string& file)
 	std::ofstream ostr(file);
 	ostr<<data;
 	ostr.close();
-	std::cout<<"Saved: "<<file<<std::endl;
+	std::cout<<"\tSaved:\t\t"<<file<<std::endl;
 }
 
 void save_payload(const Tins::TCPStream::payload_type& payload,const std::string& name)
@@ -26,10 +27,9 @@ void save_payload(const Tins::TCPStream::payload_type& payload,const std::string
 	save_to_file(std::string((char*)payload.data(),payload.size()),name+".raw");
 }
 
-void process_payload(const Tins::RawPDU::payload_type& payload,const std::string& name)
+void process_html(const Tins::RawPDU::payload_type& payload,const std::string& name)
 {
 	std::string data((char*)payload.data(),payload.size());
-	save_to_file(data,name+".raw");
 	size_t count=0;
 	size_t ptr=0;
 
@@ -62,6 +62,49 @@ void process_payload(const Tins::RawPDU::payload_type& payload,const std::string
 	}
 }
 
+void process_nops(const Tins::RawPDU::payload_type& payload,const std::string& name)
+{
+	size_t count=0;
+
+	for(size_t ii=0;ii<payload.size();++ii)
+		if(payload[ii]==0x90)
+			++count;
+
+	std::cout<<"\tNOP Count:\t"<<count<<std::endl;
+}
+
+void process_windows_exe(const Tins::RawPDU::payload_type& payload,const std::string& name)
+{
+	std::string data((char*)payload.data(),payload.size());
+
+	std::cout<<"\tContains MZ:\t"<<std::flush;
+	if(data.find("MZ")!=std::string::npos)
+		std::cout<<"true"<<std::endl;
+	else
+		std::cout<<"false"<<std::endl;
+
+	std::cout<<"\tContains PE:\t"<<std::flush;
+	if(data.find(std::string("PE\0\0",4))!=std::string::npos)
+		std::cout<<"true"<<std::endl;
+	else
+		std::cout<<"false"<<std::endl;
+}
+
+void process_payload(const Tins::RawPDU::payload_type& payload,const std::string& name)
+{
+	std::string data((char*)payload.data(),payload.size());
+	save_to_file(data,name+".raw");
+
+	process_html(payload,name);
+	process_nops(payload,name);
+	process_windows_exe(payload,name);
+}
+
+bool follow_skip(Tins::TCPStream& stream)
+{
+	return true;
+}
+
 bool follow(Tins::TCPStream& stream)
 {
 	const Tins::RawPDU::payload_type& server=stream.server_payload();
@@ -77,10 +120,22 @@ bool follow(Tins::TCPStream& stream)
 	return true;
 }
 
-int main()
+int main(int argc,char* argv[])
 {
-	Tins::FileSniffer pcap("evidence01.pcap");
-	Tins::TCPStreamFollower follower;
-	follower.follow_streams(pcap,follow);
+	try
+	{
+		if(argc<=1)
+			throw std::runtime_error("Usage is: exorcist file.pcap");
+
+		Tins::FileSniffer pcap(argv[1]);
+		Tins::TCPStreamFollower follower;
+		follower.follow_streams(pcap,follow_skip,follow);
+	}
+	catch(std::exception& error)
+	{
+		std::cout<<error.what()<<std::endl;
+		return 1;
+	}
+
 	return 0;
 }
