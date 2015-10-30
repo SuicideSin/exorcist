@@ -72,10 +72,7 @@ void process_contiguous_nops(const Tins::RawPDU::payload_type& payload,const std
 		if(payload[ii]!=0x90||ii+1>=payload.size())
 		{
 			if(count>max_count)
-			{
 				max_count=count;
-				std::cout<<"\tNOP Contiguous:\t"<<count<<std::endl;
-			}
 
 			count=0;
 			continue;
@@ -83,6 +80,8 @@ void process_contiguous_nops(const Tins::RawPDU::payload_type& payload,const std
 
 		++count;
 	}
+
+	std::cout<<"\tNOP Contiguous:\t"<<count<<std::endl;
 }
 
 void process_nops(const Tins::RawPDU::payload_type& payload,const std::string& name)
