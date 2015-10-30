@@ -62,6 +62,29 @@ void process_html(const Tins::RawPDU::payload_type& payload,const std::string& n
 	}
 }
 
+void process_contiguous_nops(const Tins::RawPDU::payload_type& payload,const std::string& name)
+{
+	size_t max_count=0;
+	size_t count=0;
+
+	for(size_t ii=0;ii<payload.size();++ii)
+	{
+		if(payload[ii]!=0x90||ii+1>=payload.size())
+		{
+			if(count>max_count)
+			{
+				max_count=count;
+				std::cout<<"\tNOP Contiguous:\t"<<count<<std::endl;
+			}
+
+			count=0;
+			continue;
+		}
+
+		++count;
+	}
+}
+
 void process_nops(const Tins::RawPDU::payload_type& payload,const std::string& name)
 {
 	size_t count=0;
@@ -97,6 +120,7 @@ void process_payload(const Tins::RawPDU::payload_type& payload,const std::string
 
 	process_html(payload,name);
 	process_nops(payload,name);
+	process_contiguous_nops(payload,name);
 	process_windows_exe(payload,name);
 }
 

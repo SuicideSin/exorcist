@@ -1,2 +1,4 @@
 include/libtins-master/build
 out
+exorcist
+exorcist.exe
