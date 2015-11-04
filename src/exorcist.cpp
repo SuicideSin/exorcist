@@ -81,7 +81,7 @@ void process_contiguous_nops(const Tins::RawPDU::payload_type& payload,const std
 		++count;
 	}
 
-	std::cout<<"\tNOP Contiguous:\t"<<count<<std::endl;
+	std::cout<<"\tNOP Contiguous:\t"<<max_count<<std::endl;
 }
 
 void process_nops(const Tins::RawPDU::payload_type& payload,const std::string& name)
