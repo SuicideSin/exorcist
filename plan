@@ -2,11 +2,12 @@ Week 0:
 	-Now able to read files from a pcap or network stream painlessly...with application data in it.
 	-HTTP application data is removed.
 
+Week 1:
+	-Checking for Windows MZ and PE flags.
+	-Counting NOPs and maximum consecutive NOPs.
+	-"Seems" to reliably pick out Windows binaries and NOP sleds.
+
 Next Week:
-	-Try to remove application data for common protocols:
-		-ftp
-		-AIM (for sake of having example pcaps)
-	-Come up with heuristics for checking for malware:
-		-Hashes?
-		-Diffs?
-		-Straight binary comparison?
+	-Try running with multiple file captures.
+	-Find false-positive rate/false-negative rate.
+	-Implement same system for Linux (stretch).
