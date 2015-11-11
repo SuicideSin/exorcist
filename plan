@@ -14,6 +14,9 @@ Week 1:
 	-Counting NOPs and maximum consecutive NOPs.
 	-"Seems" to reliably pick out Windows binaries and NOP sleds.
 
+Week 2:
+	-Still building statistics on false positives/false negatives.
+
 Next Week:
 	-Try running with multiple file captures.
 	-Find false-positive rate/false-negative rate.
