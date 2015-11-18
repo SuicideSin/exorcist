@@ -1,6 +1,6 @@
 I am group 4.
 
-Packet Captures:
+Packet Captures Resources:
 	http://www.netresec.com/?page=PcapFiles
 	http://digitalcorpora.org/corpora/packet-dumps
 	https://wiki.wireshark.org/SampleCaptures
@@ -17,7 +17,22 @@ Week 1:
 Week 2:
 	-Still building statistics on false positives/false negatives.
 
+Week 3:
+	-Implemented finding Linux binaries in C++ version.
+	-Went to find some better PCAPS:
+		-http://contagioexchange.blogspot.com/
+			-Currently brute forcing passwords...
+			-Since you have to email author...and there's no response...
+		-http://laredo-13.mit.edu/~brendan/regin/pcap/
+		-http://panda.gtisc.gatech.edu/malrec/
+	-Realized I was looking for attacks rather than malware...
+	-Created a python version of this project:
+		-Includes getting raw streams from pcaps and parsing HTTP/HTTPS files.
+		-Thinking there was probably file extractors out there...not really...
+		-BRO looks like it does exactly what I'm doing...
+
 Next Week:
-	-Try running with multiple file captures.
-	-Find false-positive rate/false-negative rate.
-	-Implement same system for Linux (stretch).
+	-Is removing application layer stuff important?
+		-If so, try to remove application layer data.
+	-Look for possible Windows/Linux binaries.
+	-Try to get find byte code signatures for malware?
