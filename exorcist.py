@@ -32,7 +32,8 @@ def get_http_https(streams):
 					data=payload[start_pos:end_pos]
 					end_pos+=1
 
-					ret.append((streams[ii][0],header,data));
+					ret.append((streams[ii],header,data));
+
 				except Exception as e:
 					break
 		except:
@@ -40,10 +41,13 @@ def get_http_https(streams):
 
 	return ret
 
-#returns [(stream,header,ftp_payload)]
+#returns [(stream,pefile)]
 def get_pefile(streams):
+	ret=[]
+
 	for ii in range(0,len(streams)):
 		payload=streams[ii][1]
+
 		try:
 			pos=0
 			lookups=["MZ","ZM"]
@@ -53,22 +57,36 @@ def get_pefile(streams):
 					pos=payload.index(lu,pos)
 					pe=pefile.PE(data=payload[pos:])
 					pos+=len(lu)
-					print("FOUND!")
+					ret.append((streams[ii],pe))
 		except:
 			pass
 
-def print_streams(streams):
+	return ret
+
+def print_stream_flow(stream):
+	print(stream[0]+" "+str(len(stream[1]))+" bytes")
+
+def print_streams_flow(streams):
 	for ii in range(0,len(streams)):
-		print(streams[ii][0]+" "+str(len(streams[ii][1]))+" bytes")
+		print_stream_flow(streams[ii])
 
 def save_streams(streams,out):
-	stream_count=0
+	count=0
 
 	for ii in range(0,len(streams)):
-		file=open(out+"/"+str(stream_count)+".raw",'w')
+		file=open(out+"/"+str(count)+".raw",'w')
 		file.write(streams[ii][1])
 		file.close()
-		stream_count+=1
+		count+=1
+
+def save_stream_pefiles(pefiles,out):
+	count=0
+
+	for ii in pefiles:
+		file=open(out+"/"+str(count)+".exe",'w')
+		file.write(ii[1])
+		file.close()
+		count+=1
 
 #returns [(stream,payload)]
 def get_streams(filename):
@@ -101,13 +119,19 @@ def get_streams(filename):
 #streams=get_streams("evidence01.pcap")
 streams=get_streams("attack-trace.pcap")
 
-get_pefile(streams)
-
-#print_streams(streams)
+#print_streams_flow(streams)
 #save_streams(streams,"out")
 
-#for ii in get_http_https(streams):
-#	for jj in range(0,3):
-#		print(str(ii[jj])+"\n")
+pefiles=get_pefile(streams)
+for ii in pefiles:
+	print_stream_flow(ii[0])
+	print(str(ii[1]))
+	print("")
+save_stream_pefiles(pefiles,"out")
 
-#get_ftp(streams)
+#http_https=get_http_https(streams)
+#for ii in http_https:
+#	print_stream_flow(ii[0])
+#	for jj in range(1,3):
+#		print(str(ii[jj]))
+#	print("")
