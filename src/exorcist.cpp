@@ -6,6 +6,8 @@
 #include <string>
 #include <tins/tins.h>
 
+std::string filename;
+
 std::string to_lower(std::string str)
 {
 	for(auto& ii:str)
@@ -112,6 +114,17 @@ void process_windows_exe(const Tins::RawPDU::payload_type& payload,const std::st
 		std::cout<<"false"<<std::endl;
 }
 
+void process_linux_exe(const Tins::RawPDU::payload_type& payload,const std::string& name)
+{
+	std::string data((char*)payload.data(),payload.size());
+
+	std::cout<<"\tContains ELF:\t"<<std::flush;
+	if(data.find({0x74,'E','L','F'})!=std::string::npos)
+		std::cout<<"true"<<std::endl;
+	else
+		std::cout<<"false"<<std::endl;
+}
+
 void process_payload(const Tins::RawPDU::payload_type& payload,const std::string& name)
 {
 	std::string data((char*)payload.data(),payload.size());
@@ -121,7 +134,30 @@ void process_payload(const Tins::RawPDU::payload_type& payload,const std::string
 	process_nops(payload,name);
 	process_contiguous_nops(payload,name);
 	process_windows_exe(payload,name);
+	process_linux_exe(payload,name);
 }
+
+//size_t process_payload2(const Tins::RawPDU::payload_type& payload,const std::string& name)
+//{
+//	size_t max_count=0;
+//	size_t count=0;
+//
+//	for(size_t ii=0;ii<payload.size();++ii)
+//	{
+//		if(payload[ii]!=0x90||ii+1>=payload.size())
+//		{
+//			if(count>max_count)
+//				max_count=count;
+//
+//			count=0;
+//			continue;
+//		}
+//
+//		++count;
+//	}
+//
+//	return max_count;
+//}
 
 bool follow_skip(Tins::TCPStream& stream)
 {
@@ -134,11 +170,17 @@ bool follow(Tins::TCPStream& stream)
 	std::string server_name="out/server0"+std::to_string(stream.id());
 	std::cout<<server.size()<<"\t"<<stream.stream_info().server_addr.to_string()<<":"<<stream.stream_info().server_port<<"->"<<stream.stream_info().client_addr.to_string()<<":"<<stream.stream_info().client_port<<std::endl;
 	process_payload(server,server_name);
+	//size_t server_nops=process_payload2(server,server_name);
+	//if(server_nops>5)
+	//	std::cout<<server_nops<<"  "<<filename<<std::endl;
 
 	const Tins::RawPDU::payload_type& client=stream.client_payload();
 	std::string client_name="out/client0"+std::to_string(stream.id());
 	std::cout<<client.size()<<"\t"<<stream.stream_info().server_addr.to_string()<<":"<<stream.stream_info().server_port<<"<-"<<stream.stream_info().client_addr.to_string()<<":"<<stream.stream_info().client_port<<std::endl;
 	process_payload(client,client_name);
+	//size_t client_nops=process_payload2(client,client_name);
+	//if(client_nops>5)
+	//	std::cout<<client_nops<<"  "<<filename<<std::endl;
 
 	return true;
 }
@@ -150,6 +192,7 @@ int main(int argc,char* argv[])
 		if(argc<=1)
 			throw std::runtime_error("Usage is: exorcist file.pcap");
 
+		filename=std::string(argv[1]);
 		Tins::FileSniffer pcap(argv[1]);
 		Tins::TCPStreamFollower follower;
 		follower.follow_streams(pcap,follow_skip,follow);
