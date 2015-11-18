@@ -86,13 +86,13 @@ def get_streams(filename):
 
 	return ret
 
-#streams=get_streams("evidence01.pcap")
-streams=get_streams("attack-trace.pcap")
+streams=get_streams("evidence01.pcap")
+#streams=get_streams("attack-trace.pcap")
 print_streams(streams)
 save_streams(streams,"out")
 
-#for ii in get_http_https(streams):
-#	for jj in range(0,3):
-#		print(str(ii[jj])+"\n")
+for ii in get_http_https(streams):
+	for jj in range(0,3):
+		print(str(ii[jj])+"\n")
 
 #get_ftp(streams)
