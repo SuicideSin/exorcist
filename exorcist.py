@@ -88,8 +88,8 @@ def get_streams(filename):
 
 #streams=get_streams("evidence01.pcap")
 streams=get_streams("attack-trace.pcap")
-#print_streams(streams)
-save_streams(streams,"temp")
+print_streams(streams)
+save_streams(streams,"out")
 
 #for ii in get_http_https(streams):
 #	for jj in range(0,3):
