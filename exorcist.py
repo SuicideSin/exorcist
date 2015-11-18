@@ -3,6 +3,7 @@
 
 import logging
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+import pefile
 from scapy.all import *
 from scapy.error import Scapy_Exception
 
@@ -40,10 +41,21 @@ def get_http_https(streams):
 	return ret
 
 #returns [(stream,header,ftp_payload)]
-def get_ftp(streams):
+def get_pefile(streams):
 	for ii in range(0,len(streams)):
 		payload=streams[ii][1]
-		print(payload)
+		try:
+			pos=0
+			lookups=["MZ","ZM"]
+
+			for lu in lookups:
+				while True:
+					pos=payload.index(lu,pos)
+					pe=pefile.PE(data=payload[pos:])
+					pos+=len(lu)
+					print("FOUND!")
+		except:
+			pass
 
 def print_streams(streams):
 	for ii in range(0,len(streams)):
@@ -86,13 +98,16 @@ def get_streams(filename):
 
 	return ret
 
-streams=get_streams("evidence01.pcap")
-#streams=get_streams("attack-trace.pcap")
-print_streams(streams)
-save_streams(streams,"out")
+#streams=get_streams("evidence01.pcap")
+streams=get_streams("attack-trace.pcap")
 
-for ii in get_http_https(streams):
-	for jj in range(0,3):
-		print(str(ii[jj])+"\n")
+get_pefile(streams)
+
+#print_streams(streams)
+#save_streams(streams,"out")
+
+#for ii in get_http_https(streams):
+#	for jj in range(0,3):
+#		print(str(ii[jj])+"\n")
 
 #get_ftp(streams)
