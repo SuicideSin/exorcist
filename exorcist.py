@@ -41,7 +41,7 @@ def get_http_https(streams):
 
 	return ret
 
-#returns [(stream,pefile)]
+#returns [(stream,pefile,exe)]
 def get_pefile(streams):
 	ret=[]
 
@@ -55,9 +55,10 @@ def get_pefile(streams):
 			for lu in lookups:
 				while True:
 					pos=payload.index(lu,pos)
-					pe=pefile.PE(data=payload[pos:])
+					exe=payload[pos:]
+					pe=pefile.PE(data=exe)
 					pos+=len(lu)
-					ret.append((streams[ii],pe))
+					ret.append((streams[ii],pe,exe))
 		except:
 			pass
 
@@ -79,12 +80,12 @@ def save_streams(streams,out):
 		file.close()
 		count+=1
 
-def save_stream_pefiles(pefiles,out):
+def save_stream_pefiles(streams,out):
 	count=0
 
-	for ii in pefiles:
+	for ii in streams:
 		file=open(out+"/"+str(count)+".exe",'w')
-		file.write(ii[1])
+		file.write(ii[2])
 		file.close()
 		count+=1
 
