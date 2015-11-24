@@ -14,11 +14,11 @@ def get_http_https(streams):
 	for ii in range(0,len(streams)):
 		start_pos=0
 		raw=streams[ii][1]+"\r\n\r\n"
+		payload=""
 
 		while raw.find("\r\n\r\n",start_pos)>=0:
 			end_pos=raw.index("\r\n\r\n",start_pos)
 			header=raw[start_pos:end_pos]
-			payload=""
 			end_pos+=4
 
 			if len(header)>4 and header[0:4]=="HTTP":
@@ -27,22 +27,26 @@ def get_http_https(streams):
 					header=dict((key.lower(),value) for key,value in header.iteritems())
 
 					if "transfer-encoding" in header and header["transfer-encoding"].strip()=="chunked":
-						while raw.find("\r\n",end_pos)>end_pos:
-							chunk_size=int(raw[end_pos:raw.find("\r\n",end_pos)],16)
-							end_pos=raw.find("\r\n",end_pos)+2
-							payload+=raw[end_pos:end_pos+chunk_size]
-							end_pos+=chunk_size
+						while raw.find("\r\n",end_pos)>=0:
+							chunk_size=raw[end_pos:raw.find("\r\n",end_pos)]
+							if len(chunk_size)>0:
+								chunk_size=int(chunk_size,16)
+								end_pos=raw.find("\r\n",end_pos)+2
+								payload+=raw[end_pos:end_pos+chunk_size]
+								end_pos+=chunk_size+2
+							else:
+								break
 					elif "content-length" in header:
 						size=int(header["content-length"].strip())
 						payload=raw[end_pos:end_pos+size]
 						end_pos+=size
-				except:
+				except Exception as error:
 					pass
-				else:
-					if len(payload)>0:
-						ret.append((streams[ii],header,payload));
 
 			start_pos=end_pos
+
+		if len(payload)>0:
+			ret.append((streams[ii],header,payload));
 
 	return ret
 
