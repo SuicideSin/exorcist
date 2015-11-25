@@ -4,17 +4,20 @@ import logging
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 import magic
 import mimetypes
+import os
 from scapy.all import *
 import sys
 
-#returns [(stream,header,http_payload)]
-def get_http_https(streams):
+#returns [(session,carving,mime)]
+def carve_http(streams):
 	ret=[]
 
-	for ii in range(0,len(streams)):
+	for stream in streams:
 		start_pos=0
-		raw=streams[ii][1]+"\r\n\r\n"
-		payload=""
+		raw=stream[1]+"\r\n\r\n"
+		carving=""
+		mime=""
+		header=""
 
 		while raw.find("\r\n\r\n",start_pos)>=0:
 			end_pos=raw.index("\r\n\r\n",start_pos)
@@ -25,6 +28,10 @@ def get_http_https(streams):
 				try:
 					header=dict(re.findall(r'(?P<name>.*?):(?P<value>.*?)\r\n',header))
 					header=dict((key.lower(),value) for key,value in header.iteritems())
+					if "content-type" in header:
+						mime=str(header["content-type"].strip())
+						if mime.find(";")>-1:
+							mime=mime[0:mime.index(";")]
 
 					if "transfer-encoding" in header and header["transfer-encoding"].strip()=="chunked":
 						while raw.find("\r\n",end_pos)>=0:
@@ -32,34 +39,32 @@ def get_http_https(streams):
 							if len(chunk_size)>0:
 								chunk_size=int(chunk_size,16)
 								end_pos=raw.find("\r\n",end_pos)+2
-								payload+=raw[end_pos:end_pos+chunk_size]
+								carving+=raw[end_pos:end_pos+chunk_size]
 								end_pos+=chunk_size+2
 							else:
 								break
 					elif "content-length" in header:
 						size=int(header["content-length"].strip())
-						payload=raw[end_pos:end_pos+size]
+						carving=raw[end_pos:end_pos+size]
 						end_pos+=size
-				except Exception as error:
+				except:
 					pass
+
+				if len(carving)>0 and carving!="\r\n\r\n":
+					ret.append((stream,carving,mime));
 
 			start_pos=end_pos
 
-		if len(payload)>0:
-			ret.append((streams[ii],header,payload));
-
 	return ret
 
-def save_stream_http_https(streams,out,count_start=0):
+def save_carvings(carvings,out,count_start=0):
 	count=count_start
 
 	try:
-		for ii in streams:
-			extension=".raw"
-
+		for carving in carvings:
 			try:
 				with magic.Magic(flags=magic.MAGIC_MIME_TYPE) as m:
-					mime=str(m.id_buffer(ii[2]))
+					mime=str(m.id_buffer(carving[1]))
 					extension=str(mimetypes.guess_extension(mime))
 					if extension=="None":
 						if mime=="application/x-dosexec":
@@ -72,14 +77,49 @@ def save_stream_http_https(streams,out,count_start=0):
 							extension=".doc"
 						elif mime=="image/x-icon":
 							extension=".ico"
+						elif mime=="text/javascript":
+							extension=".js"
+						elif mime=="text/html":
+							extension=".html"
 						else:
-							print("Unknown mime \""+mime+"\" "+str(count)+".raw")
-							extension=".raw"
+							print("Unknown mime \""+mime+"\" "+str(count)+".obj")
+							extension=".obj"
 			except:
 				pass
 
-			file=open(out+"/"+str(count)+extension,'w')
-			file.write(ii[2])
+
+			if extension==".obj" or extension==".ksh":
+				extension=str(mimetypes.guess_extension(carving[2]))
+				if carving[2]=="text/javascript" or carving[2]=="application/x-javascript":
+					extension=".js"
+				if carving[2]=="text/html":
+					extension=".html"
+				if carving[2]=="application/ocsp-response":
+					extension=".ocsp"
+				if carving[2]=="image/x-icon":
+					extension=".ico"
+				if carving[2]=="application/exe":
+					extension=".exe"
+				if carving[2]=="application/pkix-crl":
+					extension=".crl"
+				if carving[2]=="application/x-msdownload":
+					extension=".dll"
+				if carving[2][0:18]=="application/vnd.rn":
+					extension=".rm"
+
+			if extension=="None":
+				extension=".obj"
+			if extension==".jpe":
+				extension=".jpg"
+
+			file_folder=str(carving[0][0])
+			file_folder=file_folder.replace(" ","_")
+			file_folder=file_folder.replace(">","TO")
+			file_path=out+"/"+file_folder+"/"
+			if not os.path.isdir(file_path):
+				os.makedirs(file_path)
+			file=open(file_path+str(count)+extension,'w')
+			file.write(carving[1])
 			file.close()
 			count+=1
 	except:
@@ -87,22 +127,22 @@ def save_stream_http_https(streams,out,count_start=0):
 	finally:
 		return count
 
-#returns [(stream,payload)]
+#returns [(session,payload)]
 def get_streams(filename):
 	try:
 		cap=rdpcap(filename)
-		streams=cap.sessions()
+		sessions=cap.sessions()
 		ret=[]
 
-		for ii in streams:
+		for session in sessions:
 			payload=""
 			payload_chunked=""
-			for packet in streams[ii]:
+			for packet in sessions[session]:
 				if TCP in packet and type(packet[TCP].payload)==Raw:
 					packet_payload=str(packet[TCP].payload)
 					payload+=packet_payload
 
-			ret.append((ii,payload));
+			ret.append((session,payload));
 
 		return ret
 	except:
@@ -119,7 +159,7 @@ if __name__=="__main__":
 		filename=str(sys.argv[ii])
 		try:
 			streams=get_streams(filename)
-			http_https=get_http_https(streams)
-			files_wrote=save_stream_http_https(http_https,"out",files_wrote)
+			carvings=carve_http(streams)
+			files_wrote=save_carvings(carvings,"out/"+filename,files_wrote)
 		except Exception as error:
 			print(error)
