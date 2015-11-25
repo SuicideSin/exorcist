@@ -5,6 +5,7 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 import magic
 import mimetypes
 from scapy.all import *
+import sys
 
 #returns [(stream,header,http_payload)]
 def get_http_https(streams):
@@ -49,49 +50,76 @@ def get_http_https(streams):
 
 	return ret
 
-def save_stream_http_https(streams,out):
-	count=0
+def save_stream_http_https(streams,out,count_start=0):
+	count=count_start
 
-	for ii in streams:
-		extension=".raw"
+	try:
+		for ii in streams:
+			extension=".raw"
 
-		try:
-			with magic.Magic(flags=magic.MAGIC_MIME_TYPE) as m:
-				mime=str(m.id_buffer(ii[2]))
-				extension=str(mimetypes.guess_extension(mime))
-				if extension=="None":
-					if mime=="application/x-dosexec":
-						extension=".exe"
-					else:
-						extension=".raw"
-		except:
-			pass
+			try:
+				with magic.Magic(flags=magic.MAGIC_MIME_TYPE) as m:
+					mime=str(m.id_buffer(ii[2]))
+					extension=str(mimetypes.guess_extension(mime))
+					if extension=="None":
+						if mime=="application/x-dosexec":
+							extension=".exe"
+						elif mime=="application/vnd.ms-cab-compressed":
+							extension=".cab"
+						elif mime=="application/gzip":
+							extension=".gz"
+						elif mime=="application/CDFV2-corrupt":
+							extension=".doc"
+						elif mime=="image/x-icon":
+							extension=".ico"
+						else:
+							print("Unknown mime \""+mime+"\" "+str(count)+".raw")
+							extension=".raw"
+			except:
+				pass
 
-		file=open(out+"/"+str(count)+extension,'w')
-		file.write(ii[2])
-		file.close()
-		count+=1
+			file=open(out+"/"+str(count)+extension,'w')
+			file.write(ii[2])
+			file.close()
+			count+=1
+	except:
+		raise Exception("Error saving files.")
+	finally:
+		return count
 
 #returns [(stream,payload)]
 def get_streams(filename):
-	cap=rdpcap(filename)
-	streams=cap.sessions()
-	file_count=0
+	try:
+		cap=rdpcap(filename)
+		streams=cap.sessions()
+		ret=[]
 
-	ret=[]
+		for ii in streams:
+			payload=""
+			payload_chunked=""
+			for packet in streams[ii]:
+				if TCP in packet and type(packet[TCP].payload)==Raw:
+					packet_payload=str(packet[TCP].payload)
+					payload+=packet_payload
 
-	for ii in streams:
-		payload=""
-		payload_chunked=""
-		for packet in streams[ii]:
-			if TCP in packet and type(packet[TCP].payload)==Raw:
-				packet_payload=str(packet[TCP].payload)
-				payload+=packet_payload
+			ret.append((ii,payload));
 
-		ret.append((ii,payload));
+		return ret
+	except:
+		raise Exception("Error opening pcap \""+filename+"\".")
 
-	return ret
+if __name__=="__main__":
+	if len(sys.argv)<=1:
+		print("Usage: ./exorcist file.pcap ...")
+		exit(1)
 
-streams=get_streams("test.pcap")
-http_https=get_http_https(streams)
-save_stream_http_https(http_https,"out")
+	files_wrote=0
+
+	for ii in range(1,len(sys.argv)):
+		filename=str(sys.argv[ii])
+		try:
+			streams=get_streams(filename)
+			http_https=get_http_https(streams)
+			files_wrote=save_stream_http_https(http_https,"out",files_wrote)
+		except Exception as error:
+			print(error)
