@@ -4,8 +4,6 @@ import logging
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 import magic
 import mimetypes
-import pefile
-import pprint
 from scapy.all import *
 
 #returns [(stream,header,http_payload)]
@@ -64,64 +62,13 @@ def save_stream_http_https(streams,out):
 				if extension=="None":
 					if mime=="application/x-dosexec":
 						extension=".exe"
+					else:
+						extension=".raw"
 		except:
 			pass
 
 		file=open(out+"/"+str(count)+extension,'w')
 		file.write(ii[2])
-		file.close()
-		count+=1
-
-'''
-#returns [(stream,pefile,exe)]
-def get_pefile(streams):
-	ret=[]
-
-	for ii in range(0,len(streams)):
-		payload=streams[ii][1]
-		pos=0
-		lookups=["MZ","ZM"]
-
-		for lu in lookups:
-			while payload.find(lu,pos)>=0:
-				pos=payload.index(lu,pos)
-				exe=payload[pos:]
-				pos+=len(lu)
-
-				try:
-					pe=pefile.PE(data=exe)
-					size=pe.sections[-1].PointerToRawData+pe.sections[-1].SizeOfRawData
-					binary=exe[0:size]
-					ret.append((streams[ii],pe,binary))
-				except Exception as error:
-					print(error)
-					pass
-
-	return ret
-
-def save_stream_pefiles(streams,out):
-	count=0
-
-	for ii in streams:
-		file=open(out+"/"+str(count)+".exe",'w')
-		file.write(ii[2])
-		file.close()
-		count+=1
-'''
-
-def print_stream_flow(stream):
-	print(stream[0]+" "+str(len(stream[1]))+" bytes")
-
-def print_streams_flow(streams):
-	for ii in range(0,len(streams)):
-		print_stream_flow(streams[ii])
-
-def save_streams(streams,out):
-	count=0
-
-	for ii in range(0,len(streams)):
-		file=open(out+"/"+str(count)+".raw",'w')
-		file.write(streams[ii][1])
 		file.close()
 		count+=1
 
@@ -145,26 +92,6 @@ def get_streams(filename):
 
 	return ret
 
-#streams=get_streams("evidence01.pcap")
-#streams=get_streams("attack-trace.pcap")
 streams=get_streams("test.pcap")
-
-'''
-print_streams_flow(streams)
-save_streams(streams,"out")
-
-pefiles=get_pefile(streams)
-for ii in pefiles:
-	print_stream_flow(ii[0])
-	print(str(ii[1]))
-	print("")
-save_stream_pefiles(pefiles,"out")
-'''
 http_https=get_http_https(streams)
-'''
-for ii in http_https:
-	for jj in range(1,3):
-		print(str(ii[jj]))
-	print("")
-'''
 save_stream_http_https(http_https,"out")
