@@ -3,7 +3,7 @@ NO WHERE CLOSE TO RELEASE
 Exorcist
 Utility for finding malware in pcaps or live streams.
 
-Requires Python, Pefile, and Scapy
+Requires Magic, MimeFiles, Python, and Scapy
 
 Building:
 
