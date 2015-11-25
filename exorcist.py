@@ -1,8 +1,9 @@
 #!/usr/bin/python
-#  http://bt3gl.github.io/black-hat-python-infinite-possibilities-with-the-scapy-module.html
 
 import logging
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+import magic
+import mimetypes
 import pefile
 import pprint
 from scapy.all import *
@@ -54,11 +55,24 @@ def save_stream_http_https(streams,out):
 	count=0
 
 	for ii in streams:
-		file=open(out+"/"+str(count)+".html",'w')
+		extension=".raw"
+
+		try:
+			with magic.Magic(flags=magic.MAGIC_MIME_TYPE) as m:
+				mime=str(m.id_buffer(ii[2]))
+				extension=str(mimetypes.guess_extension(mime))
+				if extension=="None":
+					if mime=="application/x-dosexec":
+						extension=".exe"
+		except:
+			pass
+
+		file=open(out+"/"+str(count)+extension,'w')
 		file.write(ii[2])
 		file.close()
 		count+=1
 
+'''
 #returns [(stream,pefile,exe)]
 def get_pefile(streams):
 	ret=[]
@@ -93,6 +107,7 @@ def save_stream_pefiles(streams,out):
 		file.write(ii[2])
 		file.close()
 		count+=1
+'''
 
 def print_stream_flow(stream):
 	print(stream[0]+" "+str(len(stream[1]))+" bytes")
@@ -134,19 +149,22 @@ def get_streams(filename):
 #streams=get_streams("attack-trace.pcap")
 streams=get_streams("test.pcap")
 
-#print_streams_flow(streams)
-#save_streams(streams,"out")
+'''
+print_streams_flow(streams)
+save_streams(streams,"out")
 
-#pefiles=get_pefile(streams)
-#for ii in pefiles:
-#	print_stream_flow(ii[0])
-#	print(str(ii[1]))
-#	print("")
-#save_stream_pefiles(pefiles,"out")
-
+pefiles=get_pefile(streams)
+for ii in pefiles:
+	print_stream_flow(ii[0])
+	print(str(ii[1]))
+	print("")
+save_stream_pefiles(pefiles,"out")
+'''
 http_https=get_http_https(streams)
-#for ii in http_https:
-#	for jj in range(1,3):
-#		print(str(ii[jj]))
-#	print("")
+'''
+for ii in http_https:
+	for jj in range(1,3):
+		print(str(ii[jj]))
+	print("")
+'''
 save_stream_http_https(http_https,"out")
