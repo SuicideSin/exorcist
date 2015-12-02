@@ -36,6 +36,9 @@ Week 4:
 	-Currently carving HTTP/HTTPS (single and chunked connection).
 	-Compared with NetworkMiner, all file hashes are the same so far.
 
+Week 5:
+	-Did absolutely nothing...
+
 Next Week:
 	-Add other services (tftp, ftp, etc?)
 	-Run through virus total or something?
