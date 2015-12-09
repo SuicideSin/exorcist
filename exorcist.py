@@ -24,7 +24,7 @@ def carve_http(streams):
 			header=raw[start_pos:end_pos]
 			end_pos+=4
 
-			if len(header)>4 and header[0:4]=="HTTP":
+			if len(header)>4 and header[:4]=="HTTP":
 				try:
 					header=dict(re.findall(r'(?P<name>.*?):(?P<value>.*?)\r\n',header))
 					header=dict((key.lower(),value) for key,value in header.iteritems())
@@ -57,6 +57,7 @@ def carve_http(streams):
 
 	return ret
 
+#expects carvings in [(session,carving,mime)]
 def save_carvings(carvings,out,count_start=0):
 	count=count_start
 
