@@ -1,7 +1,5 @@
-NO WHERE CLOSE TO RELEASE
-
 Exorcist
-Utility for finding malware in pcaps or live streams.
+	Utility for carving out HTTP files from pcaps (or alternatively live captures).
 
 Dependencies:
 
