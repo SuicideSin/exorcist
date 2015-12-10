@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import hashlib
 import logging
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 import magic
@@ -8,15 +9,15 @@ import os
 from scapy.all import *
 import sys
 
-#returns [(session,carving,mime)]
+#returns [(session,carving)]
 def carve_http(streams):
 	ret=[]
+	requests=[]
 
 	for stream in streams:
 		start_pos=0
 		raw=stream[1]+"\r\n\r\n"
 		carving=""
-		mime=""
 		header=""
 
 		while raw.find("\r\n\r\n",start_pos)>=0:
@@ -24,16 +25,10 @@ def carve_http(streams):
 			header=raw[start_pos:end_pos]
 			end_pos+=4
 
-			if len(header)>4 and header[:4]=="HTTP":
+			if header[:4]=="HTTP":
 				try:
 					header=dict(re.findall(r'(?P<name>.*?):(?P<value>.*?)\r\n',header))
 					header=dict((key.lower(),value) for key,value in header.iteritems())
-
-					if "content-type" in header:
-						mime=str(header["content-type"].strip())
-
-						if mime.find(";")>-1:
-							mime=mime[0:mime.index(";")]
 
 					if "transfer-encoding" in header and header["transfer-encoding"].strip()=="chunked":
 						while raw.find("\r\n",end_pos)>=0:
@@ -56,48 +51,18 @@ def carve_http(streams):
 					pass
 
 				if len(carving)>0 and carving!="\r\n\r\n":
-					ret.append((stream,carving,mime));
+					ret.append((stream,carving))
 
 			start_pos=end_pos
 
 	return ret
 
-#expects carvings in [(session,carving,mime)]
+#expects carvings in [(session,carving)]
 def save_carvings(carvings,out,count_start=0):
 	count=count_start
 
 	try:
 		for carving in carvings:
-			mime=carving[2]
-
-			if mime=="":
-				mime=magic.from_buffer(carving[1],mime=True)
-
-			extension=str(mimetypes.guess_extension(mime))
-
-			if mime=="text/javascript" or mime=="application/x-javascript":
-				extension=".js"
-			if mime=="text/html":
-				extension=".html"
-			if mime=="application/ocsp-response":
-				extension=".ocsp"
-			if mime=="image/x-icon":
-				extension=".ico"
-			if mime=="application/x-gzip":
-				extension=".gz"
-			if mime=="application/exe" or mime=="application/x-dosexec":
-				extension=".exe"
-			if mime=="application/pkix-crl":
-				extension=".crl"
-			if mime=="application/x-msdownload":
-				extension=".dll"
-			if mime[0:18]=="application/vnd.rn":
-				extension=".rm"
-			if extension==".jpe":
-				extension=".jpg"
-			if extension=="None" or extension=="":
-				extension=".html"
-
 			file_folder=str(carving[0][0])
 			file_folder=file_folder.replace(" ","_")
 			file_folder=file_folder.replace(">","TO")
@@ -106,8 +71,9 @@ def save_carvings(carvings,out,count_start=0):
 			if not os.path.isdir(file_path):
 				os.makedirs(file_path)
 
-			print("\tSaving \""+file_path+str(count)+extension+"\"")
-			file=open(file_path+str(count)+extension,'w')
+			full_path=file_path+hashlib.sha1(carving[1]).hexdigest()
+			print("\tSaving \""+full_path+"\"")
+			file=open(full_path,'w')
 			file.write(carving[1])
 			file.close()
 			count+=1
