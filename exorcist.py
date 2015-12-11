@@ -3,8 +3,6 @@
 import hashlib
 import logging
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-import magic
-import mimetypes
 import os
 from scapy.all import *
 import sys

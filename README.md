@@ -3,7 +3,7 @@ Exorcist
 
 Dependencies:
 
-	pip install common-mimetypes python-magic pcapy scapy
+	pip install pcapy scapy
 
 Building:
 
