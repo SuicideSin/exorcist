@@ -108,7 +108,7 @@ def get_streams(filename):
 
 if __name__=="__main__":
 	if len(sys.argv)<=1:
-		print("Usage: ./exorcist file.pcap ...")
+		print("Usage: ./exorcist.py file.pcap ...")
 		exit(1)
 
 	files_wrote=0
