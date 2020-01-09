@@ -45,7 +45,7 @@ def carve_http(streams):
 						carving=raw[end_pos:end_pos+size]
 						end_pos+=size
 
-				except:
+				except Exception:
 					pass
 
 				if len(carving)>0 and carving!="\r\n\r\n":
@@ -103,7 +103,7 @@ def get_streams(filename):
 
 		return ret
 
-	except:
+	except Exception:
 		raise Exception("Error opening pcap \""+filename+"\".")
 
 if __name__=="__main__":
